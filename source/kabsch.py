@@ -48,6 +48,8 @@ def translate(set_of_points, translation_matrix):
 
 def rmsd(set1, set2):
     """
+    set1: numpy.matrix
+    set2:numpy.matrix
     Built to get rmsd. Speaks for itself.
     """
     if set1.shape!=set2.shape:
@@ -60,25 +62,44 @@ def rmsd(set1, set2):
     return math.sqrt(average(distance_squared_sum))
 
 def get_centroid(set_of_points):
+    """
+    set_of_points: numpy.matrix
+    """
     centroid_x=average((get_array_i(i,0) for i in set_of_points))
     centroid_y=average((get_array_i(i,1) for i in set_of_points))
     centroid_z=average((get_array_i(i,2) for i in set_of_points))
     return centroid_x,centroid_y,centroid_z
 
 def centre(set_of_points):
+    """
+    set_of_points: numpy.matrix
+    """
     x,y,z=get_centroid(set_of_points)
     return np.matrix([[get_array_i(i, 0)-x, get_array_i(i, 1)-y, get_array_i(i, 2)-z] for i in set_of_points])
 
 def centred_covariance(set1, set2):
+    """
+    set1: numpy.matrix
+    set2:numpy.matrix
+    Built to get rmsd. Speaks for itself.
+    """
     return set1.transpose()*set2
 
 def optimal_rotation_matrix(A):
+    """
+    A: numpy.matrix
+    """
     v,s,w_trans=np.linalg.svd(A)
     d=sign(np.linalg.det(w_trans.transpose()*v.transpose()))
     temp_matrix=np.matrix([[1,0,0],[0,1,0],[0,0,d]])
     return w_trans.transpose()*temp_matrix*v.transpose()
 
 def kabsch(set1, set2):
+    """
+    set1: numpy.matrix
+    set2:numpy.matrix
+    Built to get rmsd. Speaks for itself.
+    """
     if set1.shape != set2.shape:
         raise ImproperSizeError
     centred_1=centre(set1)
@@ -87,6 +108,11 @@ def kabsch(set1, set2):
     return optimal_rotation_matrix(A)
 
 def optimal_rmsd(set1, set2):
+    """
+    set1: numpy.matrix
+    set2:numpy.matrix
+    Built to get rmsd. Speaks for itself.
+    """
     centred_1=centre(set1)
     centred_2=centre(set2)
     return rmsd(centred_1, centred_2*kabsch(set1, set2))
