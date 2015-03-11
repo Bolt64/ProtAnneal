@@ -81,7 +81,6 @@ def centred_covariance(set1, set2):
     """
     set1: numpy.matrix
     set2:numpy.matrix
-    Built to get rmsd. Speaks for itself.
     """
     return set1.transpose()*set2
 
@@ -98,7 +97,6 @@ def kabsch(set1, set2):
     """
     set1: numpy.matrix
     set2:numpy.matrix
-    Built to get rmsd. Speaks for itself.
     """
     if set1.shape != set2.shape:
         raise ImproperSizeError
@@ -111,7 +109,6 @@ def optimal_rmsd(set1, set2):
     """
     set1: numpy.matrix
     set2:numpy.matrix
-    Built to get rmsd. Speaks for itself.
     """
     centred_1=centre(set1)
     centred_2=centre(set2)
