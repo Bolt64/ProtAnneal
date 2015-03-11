@@ -5,8 +5,8 @@ import kabsch as kb
 import pdb_parser as parser
 
 # This script may not be 100% correct. It has not been tested
-# rigourously enough. Unless tested further, do not base any scientific
-# data on the results of this script. You have been warned.
+# rigourously enough. It's probably correct, but don't hold me
+# to my word.
 
 def get_backbone(pdb_file):
     """
@@ -32,7 +32,6 @@ def mutate(protein_pdb, res_no, res_pdb):
             if line['name'] in (' N  ', ' CA ', ' C  '):
                 backbone_original.append([line['x'], line['y'], line['z']])
     backbone_replacement=get_backbone(res_pdb).tolist()
-# Should the arguments be switched around?
     rotation=kb.kabsch(np.matrix(backbone_original), np.matrix(backbone_replacement))
     centroid_original=kb.get_centroid(np.matrix(backbone_original))
     centroid_replacement=kb.get_centroid(np.matrix(backbone_replacement))
