@@ -54,6 +54,13 @@ def mutate(protein_pdb, res_no, res_pdb):
             amino_acid_inserted=True
     return new_protein
 
+def mutate_to_file(protein_pdb, res_no, res_pdb, output_pdb):
+    new_protein=mutate(protein_pdb, res_no, res_pdb)
+    with open(output_pdb, "a") as output:
+        for line in new_protein:
+            output.write(parser.pdb_format(line))
+            output.write("\n")
+
 if __name__=="__main__":
     from sys import argv
     protein_pdb=argv[-3]
