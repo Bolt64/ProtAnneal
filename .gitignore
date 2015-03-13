@@ -52,3 +52,9 @@ docs/_build/
 
 # PyBuilder
 target/
+
+# gedit dump
+*~
+
+# third-party software
+third-party
