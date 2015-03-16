@@ -45,6 +45,11 @@ def pdb_format(line):
     out_string+=line['charge']
     return out_string
 
+def filter_line(line_generator, predicate):
+    for line in line_generator:
+        if predicate(line):
+            yield line
+
 if __name__=="__main__":
     from sys import argv
     for l in parse_file(argv[-1]):

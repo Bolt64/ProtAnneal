@@ -1,0 +1,2 @@
+In date: 3.16.2015
+    Add docstrings to all functions. Make sure they pass pylint.
