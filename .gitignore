@@ -58,3 +58,9 @@ target/
 
 # third-party software
 third-party
+
+# working directory
+workspace
+
+# Autoanneal directory
+Autoanneal
