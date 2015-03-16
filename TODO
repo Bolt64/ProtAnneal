@@ -1,2 +1,7 @@
-In date: 3.16.2015
+In date: 16.3.2015
     Add docstrings to all functions. Make sure they pass pylint.
+
+In date: 16.3.2015
+    Speed up the get_atom_distances.py script. Maybe multiproces? Deepesh would
+    suggest writing it in C. I would prefer running it on a faster computer
+    than my i3.
