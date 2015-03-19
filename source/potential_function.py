@@ -50,4 +50,4 @@ if __name__=="__main__":
     x=[i[0] for i in xy]
     y=[i[1] for i in xy]
     plt.plot(x,y,'ro')
-    plt.savefig("output")
+    plt.savefig("/tmp/output")
