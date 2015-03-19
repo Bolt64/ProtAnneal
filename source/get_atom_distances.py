@@ -1,28 +1,32 @@
 #!/usr/bin/env python
 
+"""
+This defines the functions to get inter atomic
+distances in the protein.
+"""
+
 import pdb_parser as parser
 import itertools as it
 import math
 import os
 
-atoms_to_look = (" C",)# " H", " S")
+# Some global constants. I'm so sorry. :(
+ATOMS_TO_LOOK = (" C",)# " H", " S")
 THRESHOLD = 10 # Angstroms
-TO_CONSIDER=(' CD1',)# " CD2")
-RESIDUE="LEU"
-#RADIUS = 4 # Angstroms
+TO_CONSIDER = (' CD1',)# " CD2")
+RESIDUE = "LEU"
 
 def get_distance(atom1, atom2):
+    """
+    Returns distance between atom1 and atom2.
+    """
     return math.sqrt(sum((atom1[i]-atom2[i])**2 for i in 'xyz'))
 
-def get_subunit(subunit):
-    def predicate(line):
-        if line['chainID']==subunit:
-            return True
-        else:
-            return False
-    return predicate
-
 def get_buried_residues(rsa_file, threshold=30):
+    """
+    Takes an rsa file and returns the residues which less
+    than threshold accessible.
+    """
     for line in open(rsa_file):
         if line.startswith("RES"):
             temp=line.strip().split()
@@ -32,10 +36,90 @@ def get_buried_residues(rsa_file, threshold=30):
                 yield res_no
 
 def get_inner_residues(prot_pdb, list_of_res):
+    """
+    Takes in a prot_pdb file and a list of residues
+    and returns a pdb file with only the selected residues.
+    """
     res_nos={i for i in list_of_res}
     for atom in parser.parse_file(prot_pdb):
         if atom['resSeq'] in res_nos:
             yield parser.pdb_format(atom)
+
+def filter_by_residue(residue, carbon_atoms):
+    """
+    Higher order function that takes in a residue and carbon atoms
+    and returns a function that only evaluates to true if the atom
+    satisfies the criteria.
+    """
+    def predicate(line):
+        if line['resName']==residue and line['name'] in carbon_atoms:
+            return True
+        else:
+            return False
+    return predicate
+
+def get_distances(pdb_file):
+    """
+    Gets the pairwise distances of all the valid atoms in the protein.
+    """
+    predicate=filter_by_residue(RESIDUE, TO_CONSIDER)
+    for atom1,atom2 in it.combinations(parser.filter_line(parser.parse_file(pdb_file), predicate), 2):
+        yield get_distance(atom1, atom2)
+
+def filter_distance(list_of_distances, predicate):
+    """
+    Takes a list of distances and filter through
+    according to predicate.
+    """
+    for distance in list_of_distances:
+        if predicate(distance):
+            yield distance
+
+def distance_threshold(threshold):
+    """
+    A higher order function that returns a predicate which
+    is only true if the distance is less than threshold.
+    """
+    def predicate(distance):
+        if distance<=threshold:
+            return True
+        else:
+            return False
+    return predicate
+
+def get_distances_from_core(pdb_file):
+    """
+    This function does everything, reduces the protein, gets the core
+     and then the distances. Very ugly though. :P
+    """
+    os.popen("~/protein_lab/third-party/binaries/reduce {0} > temp1.pdb".format(pdb_file))
+    os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess temp1.pdb")
+    temp_output=open("temp2.pdb", "w")
+    for l in get_inner_residues("temp1.pdb", get_buried_residues("temp1.rsa")):
+        temp_output.write(l+"\n")
+    temp_output.close()
+    for distance in filter_distance(get_distances("temp2.pdb"), distance_threshold(THRESHOLD)):
+        print(distance)
+    os.popen("rm temp1.pdb")
+    os.popen("rm temp2.pdb")
+    os.popen("rm temp1.rsa")
+    os.popen("rm temp1.asa")
+    os.popen("rm temp1.log")
+
+if __name__ == "__main__":
+    from sys import argv
+    get_distances_from_core(argv[-1])
+
+"""
+Discarded functions
+
+def get_subunit(subunit):
+    def predicate(line):
+        if line['chainID']==subunit:
+            return True
+        else:
+            return False
+    return predicate
 
 def separate_by_res_no(pdb_file, subunit):
     separated_residues = {}
@@ -48,56 +132,13 @@ def separate_by_res_no(pdb_file, subunit):
 
 def get_pairwise_distances(res1, res2):
     for atom1 in res1:
-        if atom1['element'] in atoms_to_look:
+        if atom1['element'] in ATOMS_TO_LOOK:
             for atom2 in res2:
-                if atom1['element'] in atoms_to_look:
+                if atom1['element'] in ATOMS_TO_LOOK:
                     yield get_distance(atom1, atom2)
 
 def make_pairs(separated_residues):
     for res1, res2 in it.combinations(separated_residues, 2):
         yield res1, res2
 
-def filter_by_residue(residue, carbon_atoms):
-    def predicate(line):
-        if line['resName']==residue and line['name'] in carbon_atoms:
-            return True
-        else:
-            return False
-    return predicate
-
-def get_distances(pdb_file):
-    predicate=filter_by_residue(RESIDUE, TO_CONSIDER)
-    for atom1,atom2 in it.combinations(parser.filter_line(parser.parse_file(pdb_file), predicate), 2):
-        yield get_distance(atom1, atom2)
-
-def filter_distance(list_of_distances, predicate):
-    for distance in list_of_distances:
-        if predicate(distance):
-            yield distance
-
-def upper_threshold(threshold):
-    def predicate(distance):
-        if distance<=threshold:
-            return True
-        else:
-            return False
-    return predicate
-
-def get_distances_from_core(pdb_file):
-    os.popen("~/protein_lab/third-party/binaries/reduce {0} > temp1.pdb".format(pdb_file))
-    os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess temp1.pdb")
-    temp_output=open("temp2.pdb", "w")
-    for l in get_inner_residues("temp1.pdb", get_buried_residues("temp1.rsa")):
-        temp_output.write(l+"\n")
-    temp_output.close()
-    for distance in filter_distance(get_distances("temp2.pdb"), upper_threshold(THRESHOLD)):
-        print(distance)
-    os.popen("rm temp1.pdb")
-    os.popen("rm temp2.pdb")
-    os.popen("rm temp1.rsa")
-    os.popen("rm temp1.asa")
-    os.popen("rm temp1.log")
-
-if __name__ == "__main__":
-    from sys import argv
-    get_distances_from_core(argv[-1])
+"""

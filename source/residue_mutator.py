@@ -1,24 +1,26 @@
 #!/usr/bin/env python
 
+"""
+This script may not be 100% correct. It has not been tested
+rigourously enough. It's probably correct, but don't hold me
+to my word. The residue mutator function works fine, but the other
+sidechain rotating function still needs to be tested.
+"""
+
 import numpy as np
 import kabsch as kb
 import pdb_parser as parser
 import math
 
-# This script may not be 100% correct. It has not been tested
-# rigourously enough. It's probably correct, but don't hold me
-# to my word. The residue mutator function works fine, but the other
-# sidechain rotating function still needs to be tested.
-
 def get_backbone(pdb_file):
     """
     Gets the N, CA, C backbone of the pdb file
     """
-    backbone=[]
+    backbone = []
     for line in parser.parse_file(pdb_file):
-        if line['ATOM']=="ATOM  ":
+        if line['ATOM'] == "ATOM  ":
             if line['name'] in (' N  ', ' CA ', ' C  '):
-                backbone.append([line['x'],line['y'],line['z']])
+                backbone.append([line['x'], line['y'], line['z']])
     return np.matrix(backbone)
 
 def mutate(protein_pdb, res_no, res_pdb):
