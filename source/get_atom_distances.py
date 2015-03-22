@@ -87,6 +87,31 @@ def distance_threshold(threshold):
             return False
     return predicate
 
+def get_labeled_pairs(pdb_file):
+    labeled_pairs={}
+    for atom1, atom2 in it.combinations(parser.parse_file(pdb_file), 2):
+        label=tuple(sorted(((atom1['resName'], atom1['name']),(atom2['resName'], atom2['name']))))
+        labeled_pairs[label]=get_distance(atom1, atom2)
+    return labeled_pairs
+
+def write_labeled_pairs(labeled_pairs, output_file):
+    with open(output_file, "w") as output:
+        for pair in labeled_pairs:
+            res1,res2=pair
+            out_string="{0} {1} {2} {3} {4}\n".format(res1[0], res1[1], res2[0], res2[1], labeled_pairs[pair])
+            output.write(out_string)
+
+def read_labeled_pairs(pair_file):
+    labeled_pairs={}
+    for line in open(pair_file):
+        a=line[0:3]
+        b=line[4:8]
+        c=line[9:12]
+        d=line[13:17]
+        e=float((line.strip().split()[-1]))
+        labeled_pairs[((a,b),(c,d))]=e
+    return labeled_pairs
+
 def get_distances_from_core(pdb_file):
     """
     This function does everything, reduces the protein, gets the core
