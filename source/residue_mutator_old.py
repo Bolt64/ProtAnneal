@@ -12,13 +12,12 @@ import kabsch as kb
 import pdb_parser as parser
 import math
 
-def get_backbone(list_of_lines):
+def get_backbone(pdb_file):
     """
     Gets the N, CA, C backbone of the pdb file
     """
-    list_of_lines=list(list_of_lines)
     backbone = []
-    for line in list_of_lines:
+    for line in parser.parse_file(pdb_file):
         if line['ATOM'] == "ATOM  ":
             if line['name'] in (' N  ', ' CA ', ' C  '):
                 backbone.append([line['x'], line['y'], line['z']])
@@ -35,32 +34,32 @@ def get_angle(vector1, vector2, axis_vector):
     angle=math.acos(np.dot(proj1, proj2.transpose()))
     return angle * 180/3.14
 
-def mutate(protein_lines, res_no, res_lines):
+def mutate(protein_pdb, res_no, res_pdb):
     """
     It replaces the residue on protein at res_no
     position with the new residue, res_pdb.
     This function may be dodgy. DO NOT USE without further testing.
     You have been warned.
     """
-    protein_lines=list(protein_lines)
-    res_lines=list(res_lines)
     backbone_original=[]
-    for line in protein_lines:
+    for line in parser.parse_file(protein_pdb):
         if line['ATOM']=="ATOM  " and line['resSeq']==res_no:
             if line['name'] in (' N  ', ' CA ', ' C  '):
                 backbone_original.append([line['x'], line['y'], line['z']])
-    backbone_replacement=get_backbone(res_lines).tolist()
+    backbone_replacement=get_backbone(res_pdb).tolist()
+    print("Backbone original", backbone_original)
+    print("Backbone replacement", backbone_replacement)
     rotation=kb.kabsch(np.matrix(backbone_original), np.matrix(backbone_replacement))
     centroid_original=kb.get_centroid(np.matrix(backbone_original))
     centroid_replacement=kb.get_centroid(np.matrix(backbone_replacement))
     inverted_centroid=[-1*i for i in centroid_replacement]
     new_protein=[]
     amino_acid_inserted=False
-    for l in protein_lines:
+    for l in parser.parse_file(protein_pdb):
         if l['resSeq']!=res_no:
             new_protein.append(l)
         if l['resSeq']==res_no and not amino_acid_inserted:
-            for j in res_lines:
+            for j in parser.parse_file(res_pdb):
                 location=np.matrix([[j['x'],j['y'], j['z']]])
                 new_loc=kb.translate((kb.translate(location, inverted_centroid))*rotation, centroid_original)
                 x,y,z=new_loc.tolist()[0]
@@ -71,6 +70,13 @@ def mutate(protein_lines, res_no, res_lines):
                 new_protein.append(j)
             amino_acid_inserted=True
     return new_protein
+
+def mutate_to_file(protein_pdb, res_no, res_pdb, output_pdb):
+    new_protein=mutate(protein_pdb, res_no, res_pdb)
+    with open(output_pdb, "a") as output:
+        for line in new_protein:
+            output.write(parser.pdb_format(line))
+            output.write("\n")
 
 def get_rotation_matrix(angle, axis):
     """
@@ -111,9 +117,9 @@ def rotate(set_of_points, pivot, rotation_matrix):
     """
     return kb.translate(kb.translate(set_of_points, [-i for i in pivot])*rotation_matrix, pivot)
 
-def find_residues(protein_lines, residue):
+def find_residues(protein_pdb, residue):
     res_nos=set()
-    for atom in protein_lines:
+    for atom in parser.parse_file(protein_pdb):
         if atom['resName']==residue:
             res_nos.add(atom['resSeq'])
     return list(res_nos)
@@ -173,13 +179,17 @@ def rotate_to_chis(chis, list_of_lines):
 
 # Auxiliary function
 
+def replace_all_residues(protein_pdb, original, new_pdb):
+    res_nos=find_residues(protein_pdb, original)
+    for i in res_nos:
+        mutate_to_file(protein_pdb, i, new_pdb, "new{0}.pdb".format(i))
+        protein_pdb="new{0}.pdb".format(i)
+
 
 if __name__=="__main__":
     from sys import argv
     protein_pdb=argv[-3]
-    res_id=int(argv[-2])
+    res_no=int(argv[-2])
     res_pdb=argv[-1]
-    protein_lines=list(parser.parse_file(protein_pdb))
-    res_lines=list(parser.parse_file(res_pdb))
-    for l in mutate(protein_lines, res_id, res_lines):
+    for l in mutate(protein_pdb, res_no, res_pdb):
         print(parser.pdb_format(l))
