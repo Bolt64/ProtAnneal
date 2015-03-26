@@ -11,6 +11,7 @@ import numpy as np
 import kabsch as kb
 import pdb_parser as parser
 import math
+import copy
 
 def get_backbone(list_of_lines):
     """
@@ -35,7 +36,7 @@ def get_angle(vector1, vector2, axis_vector):
     angle=math.acos(np.dot(proj1, proj2.transpose()))
     return angle * 180/3.14
 
-def mutate(protein_lines, res_no, res_lines):
+def mutate(protein_lines, res_no, res_lines_orig):
     """
     It replaces the residue on protein at res_no
     position with the new residue, res_pdb.
@@ -43,7 +44,7 @@ def mutate(protein_lines, res_no, res_lines):
     You have been warned.
     """
     protein_lines=list(protein_lines)
-    res_lines=list(res_lines)
+    res_lines=copy.deepcopy(res_lines_orig)
     backbone_original=[]
     for line in protein_lines:
         if line['ATOM']=="ATOM  " and line['resSeq']==res_no:
@@ -60,15 +61,19 @@ def mutate(protein_lines, res_no, res_lines):
         if l['resSeq']!=res_no:
             new_protein.append(l)
         if l['resSeq']==res_no and not amino_acid_inserted:
-            for j in res_lines:
+            for j in res_lines[:]:
                 location=np.matrix([[j['x'],j['y'], j['z']]])
                 new_loc=kb.translate((kb.translate(location, inverted_centroid))*rotation, centroid_original)
                 x,y,z=new_loc.tolist()[0]
-                j['x']=x
-                j['y']=y
-                j['z']=z
-                j['resSeq']=res_no
+                #j['x']=x
+                #j['y']=y
+                #j['z']=z
+                #j['resSeq']=res_no
                 new_protein.append(j)
+                new_protein[-1]['x']=x
+                new_protein[-1]['y']=y
+                new_protein[-1]['z']=z
+                new_protein[-1]['resSeq']=res_no
             amino_acid_inserted=True
     return new_protein
 
@@ -173,13 +178,30 @@ def rotate_to_chis(chis, list_of_lines):
 
 # Auxiliary function
 
+def subunit_predicate(subunit):
+    def predicate(line):
+        if line['chainID']==subunit:
+            return True
+        else:
+            return False
+    return predicate
+
+def replace_all_residues(protein_lines, original, res_lines):
+    protein_lines=list(protein_lines)
+    res_lines=list(res_lines)
+    res_nos=find_residues(protein_lines, original)
+    for i in res_nos:
+        protein_lines = mutate(protein_lines, i, res_lines)
+    return protein_lines
 
 if __name__=="__main__":
     from sys import argv
-    protein_pdb=argv[-3]
-    res_id=int(argv[-2])
+    protein_pdb=argv[-4]
+    res_id=argv[-3]
+    subunit=argv[-2]
     res_pdb=argv[-1]
-    protein_lines=list(parser.parse_file(protein_pdb))
+    predicate=subunit_predicate(subunit)
+    protein_lines=list(parser.filter_line(parser.parse_file(protein_pdb), predicate))
     res_lines=list(parser.parse_file(res_pdb))
-    for l in mutate(protein_lines, res_id, res_lines):
+    for l in replace_all_residues(protein_lines, res_id, res_lines):
         print(parser.pdb_format(l))
