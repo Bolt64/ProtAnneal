@@ -35,6 +35,19 @@ def get_buried_residues(rsa_file, threshold=30):
             if rel_accessibility<=threshold:
                 yield res_no
 
+def get_buried_residues_pdb(pdb_file, threshold=30):
+    """
+    Takes a pdb file and returns a list of residue numbers
+    which are buried more than the threshold
+    """
+    filename = pdb_file.strip("/")[-1][:-3]
+    os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess {0}".format(pdb_file))
+    result = list(get_buried_residues(filename+".rsa", threshold))
+    os.popen("rm {}.rsa".format(filename))
+    os.popen("rm {}.asa".format(filename))
+    os.popen("rm {}.log".format(filename))
+    return result
+
 def get_inner_residues(prot_pdb, list_of_res):
     """
     Takes in a prot_pdb file and a list of residues
