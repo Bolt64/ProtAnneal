@@ -40,7 +40,7 @@ def get_buried_residues_pdb(pdb_file, threshold=30):
     Takes a pdb file and returns a list of residue numbers
     which are buried more than the threshold
     """
-    filename = pdb_file.strip("/")[-1][:-3]
+    filename = pdb_file.split("/")[-1][:-4]
     os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess {0}".format(pdb_file))
     result = list(get_buried_residues(filename+".rsa", threshold))
     os.popen("rm {}.rsa".format(filename))
