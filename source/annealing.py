@@ -21,10 +21,11 @@ import pdb_parser as parser
 import zdope_score as energy
 import ramachandran_angles as ra
 import dunbrack_parser as dp
+from config import *
 
-allowed_residues = ["VAL", "LEU", "ILE", "MET", "ALA"]
-residue_path = "/home/bolt/protein_lab/database/residues/{0}_naiveH.pdb"
-dunbrack_file = "/home/bolt/protein_lab/other/dunbrack2.csv"
+#allowed_residues = ["VAL", "LEU", "ILE", "MET", "ALA"]
+#residue_path = "/home/bolt/protein_lab/database/residues/{0}_naiveH.pdb"
+#dunbrack_file = "/home/bolt/protein_lab/other/dunbrack2.csv"
 
 # Helper functions
 
@@ -56,14 +57,14 @@ def weighted_choice(choices):
 
 # End of helper functions
 
-def get_neighbour_state(protein_pdb, name, dunbrack_library):
+def get_neighbour_state(protein_pdb, name, dunbrack_library, buried_residues):
     """
     Placeholder function
     This does not rotate the side chains. Only replaces the
     residues.
     """
     new_file=open(name, "a")
-    residue_to_mutate=rd.choice(gad.get_buried_residues_pdb(protein_pdb))
+    residue_to_mutate=rd.choice(buried_residues)
     current_residue = get_current_residue(protein_pdb, residue_to_mutate)
     new_residue = rd.choice([i for i in allowed_residues if i!=current_residue])
     protein_lines = list(parser.parse_file(protein_pdb))
@@ -112,14 +113,15 @@ def exp_temperature_func(i, iterations):
 def sigmoid_temperature_func(i, iterations):
     return 1-1.0/(1+2.0**(-20*(float(i)/iterations-0.2)))
 
-def anneal(start_state, iterations, temperature_function):
+def anneal(start_state, iterations, temperature_function, prefix=""):
     scores=[]
     dunbrack_library = dp.parse_dunbrack(dunbrack_file)
     current_state=start_state
+    buried_residues = gad.get_buried_residues_pdb(start_state)
     for i in range(iterations):
         scores.append(score(current_state))
         current_temperature = temperature_function(i, iterations)
-        new_state = get_neighbour_state(current_state, str(i)+".pdb", dunbrack_library)
+        new_state = get_neighbour_state(current_state, prefix+str(i)+".pdb", dunbrack_library, buried_residues)
         current_state = acceptor(current_state, new_state, current_temperature)
         print(current_state)
     return current_state, scores

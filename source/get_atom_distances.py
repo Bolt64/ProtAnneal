@@ -9,12 +9,16 @@ import pdb_parser as parser
 import itertools as it
 import math
 import os
+from config import *
 
 # Some global constants. I'm so sorry. :(
-ATOMS_TO_LOOK = (" C",)# " H", " S")
-THRESHOLD = 10 # Angstroms
-TO_CONSIDER = (' CD1',)# " CD2")
-RESIDUE = "LEU"
+#ATOMS_TO_LOOK = (" C",)# " H", " S")
+#THRESHOLD = 10 # Angstroms
+#TO_CONSIDER = (' CD1',)# " CD2")
+#RESIDUE = "LEU"
+#naccess_location = "/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess"
+#reduce_location = "/home/bolt/protein_lab/third-party/binaries/reduce"
+
 
 def get_distance(atom1, atom2):
     """
@@ -41,7 +45,7 @@ def get_buried_residues_pdb(pdb_file, threshold=30):
     which are buried more than the threshold
     """
     filename = pdb_file.split("/")[-1][:-4]
-    os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess {0}".format(pdb_file))
+    os.popen("{0} {1}".format(naccess_location, pdb_file))
     result = list(get_buried_residues(filename+".rsa", threshold))
     os.popen("rm {}.rsa".format(filename))
     os.popen("rm {}.asa".format(filename))
@@ -130,8 +134,8 @@ def get_distances_from_core(pdb_file):
     This function does everything, reduces the protein, gets the core
      and then the distances. Very ugly though. :P
     """
-    os.popen("~/protein_lab/third-party/binaries/reduce {0} > temp1.pdb".format(pdb_file))
-    os.popen("/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/naccess temp1.pdb")
+    os.popen("{0} {1} > temp1.pdb".format(reduce_location, pdb_file))
+    os.popen("{0} temp1.pdb".format(naccess_location))
     temp_output=open("temp2.pdb", "w")
     for l in get_inner_residues("temp1.pdb", get_buried_residues("temp1.rsa")):
         temp_output.write(l+"\n")

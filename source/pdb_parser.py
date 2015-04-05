@@ -2,7 +2,7 @@
 
 """
 A parser for pdb files as well as a writer.
-It also has a a nice filter function.
+It also has a nice filter function.
 """
 
 def parse_file(pdb_file):

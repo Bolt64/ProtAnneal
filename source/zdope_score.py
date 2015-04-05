@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import os
+from config import *
 
-Zdope_command = "/usr/local/bin/Zdope"
+#Zdope_command = "/usr/local/bin/Zdope"
 
 def get_dope_score(pdb_file):
     result = os.popen("{0} {1}".format(Zdope_command, pdb_file))
