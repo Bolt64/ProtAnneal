@@ -9,8 +9,8 @@ naccess_location = "/home/bolt/protein_lab/third-party/binaries/naccess2.1.1/nac
 reduce_location = "/home/bolt/protein_lab/third-party/binaries/reduce"
 Zdope_command = "/usr/local/bin/Zdope"
 dunbrack_file = "/home/bolt/protein_lab/other/dunbrack2.csv"
-output_directory = "./temp_pdb"
-result_directory = "./result_pdb"
+output_directory = "../workspace/temp_pdb"
+result_directory = "../workspace/result_pdb"
 
 
 # Other constants
