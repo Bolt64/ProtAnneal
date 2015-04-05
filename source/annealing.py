@@ -123,5 +123,5 @@ def anneal(start_state, iterations, temperature_function, prefix=""):
         current_temperature = temperature_function(i, iterations)
         new_state = get_neighbour_state(current_state, prefix+str(i)+".pdb", dunbrack_library, buried_residues)
         current_state = acceptor(current_state, new_state, current_temperature)
-        print(current_state)
+        print("{0}/{1}: {2}".format(i+1, iterations, current_state))
     return current_state, scores
