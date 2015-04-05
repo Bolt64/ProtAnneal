@@ -33,6 +33,11 @@ To do the first, use the `get_subunit.py` script to get out the subunit.
 python get_subunit.py <subunit> <pdb_file> > <output_file>
 ```
 
+Now, use the `correct_offset.py` on the pdb file to fix numbering offset.
+```
+python correct_offset.py <pdb_file>
+```
+
 Next use the `create_primer.py` to change all the inner residues to alanine.
 ```
 python create_primer.py <pdb_file> > <output_file>

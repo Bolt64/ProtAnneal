@@ -99,6 +99,8 @@ def kabsch(set1, set2):
     set2:numpy.matrix
     """
     if set1.shape != set2.shape:
+        print(set1)
+        print(set2)
         raise ImproperSizeError
     centred_1 = centre(set1)
     centred_2 = centre(set2)
