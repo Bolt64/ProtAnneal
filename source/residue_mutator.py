@@ -13,6 +13,15 @@ import pdb_parser as parser
 import math
 import copy
 
+def sanitize_angle(func):
+    def inner(*args, **kwargs):
+        result = func(*args, **kwargs)
+        if result<=180:
+            return result
+        else:
+            return result-360.0
+    return inner
+
 def get_backbone(list_of_lines):
     """
     Gets the N, CA, C backbone of the pdb file
@@ -25,15 +34,29 @@ def get_backbone(list_of_lines):
                 backbone.append([line['x'], line['y'], line['z']])
     return np.matrix(backbone)
 
+def get_backbone_dictionary(backbone_matrix):
+    backbone_matrix = backbone_matrix.tolist()
+    backbone_dict = {}
+    for i in range(len(backbone_matrix)/3):
+        backbone_dict[i+1]={}
+        backbone_dict[i+1]['N'] = backbone_matrix[i*3]
+        backbone_dict[i+1]['CA'] = backbone_matrix[i*3+1]
+        backbone_dict[i+1]['C'] = backbone_matrix[i*3+2]
+    return backbone_dict
+
 def normalize_vector(vector):
     norm=float(math.sqrt(sum(i**2 for i in vector.tolist()[0])))
     return vector/norm
 
+@sanitize_angle
 def get_angle(vector1, vector2, axis_vector):
     axis_vector=normalize_vector(axis_vector)
     proj1=normalize_vector(vector1-np.dot(vector1, axis_vector.transpose())*axis_vector)
     proj2=normalize_vector(vector2-np.dot(vector2, axis_vector.transpose())*axis_vector)
-    angle=math.acos(np.dot(proj1, proj2.transpose()))
+    try:
+        angle=math.acos(np.dot(proj1, proj2.transpose()))
+    except ValueError:
+        angle = 0.0
     return angle * 180/3.14
 
 def mutate(protein_lines, res_no, res_lines_orig):

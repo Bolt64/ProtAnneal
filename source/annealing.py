@@ -19,9 +19,12 @@ import residue_mutator as mut
 import get_atom_distances as gad
 import pdb_parser as parser
 import zdope_score as energy
+import ramachandran_angles as ra
+import dunbrack_parser as dp
 
 allowed_residues = ["VAL", "LEU", "ILE", "MET", "ALA"]
 residue_path = "/home/bolt/protein_lab/database/residues/{0}_naiveH.pdb"
+dunbrack_file = "/home/bolt/protein_lab/other/dunbrack2.csv"
 
 # Helper functions
 
@@ -38,9 +41,22 @@ def memoize(func):
         return cache[args]
     return inner
 
+def round_to_tens(num):
+    return int(10.0*round(num/10.0))
+
+def weighted_choice(choices):
+    total = sum(w for w, c in choices)
+    r = rd.uniform(0, total)
+    upto = 0
+    for w, c in choices:
+        if upto + w > r:
+            return c
+        upto += w
+    assert False, "Shouldn't get here"
+
 # End of helper functions
 
-def get_neighbour_state(protein_pdb, name):
+def get_neighbour_state(protein_pdb, name, dunbrack_library):
     """
     Placeholder function
     This does not rotate the side chains. Only replaces the
@@ -52,18 +68,26 @@ def get_neighbour_state(protein_pdb, name):
     new_residue = rd.choice([i for i in allowed_residues if i!=current_residue])
     protein_lines = list(parser.parse_file(protein_pdb))
     residue_lines = list(parser.parse_file(residue_path.format(new_residue)))
-    new_protein = mut.mutate(protein_lines, residue_to_mutate, residue_lines)
+
+    backbone_dictionary = mut.get_backbone_dictionary(mut.get_backbone(protein_lines))
+    phi = round_to_tens(ra.get_phi(residue_to_mutate, backbone_dictionary))
+    psi = round_to_tens(ra.get_psi(residue_to_mutate, backbone_dictionary))
+    main_key = new_residue, phi, psi
+    choices = dunbrack_library[main_key]
+    weighted_choices = [(i, choices[i]) for i in choices]
+    choice = weighted_choice(weighted_choices)
+    new_lines = mut.rotate_to_chis(choice, residue_lines)
+
+    new_protein = mut.mutate(protein_lines, residue_to_mutate, new_lines)
     for l in new_protein:
         line = parser.pdb_format(l)
         print(line, file=new_file)
     new_file.close()
+
     return name
 
 @memoize
 def score(state):
-    """
-    Placeholder function
-    """
     return energy.get_dope_score(state)
 
 def acceptor(old_state, new_state, temperature):
@@ -75,14 +99,6 @@ def acceptor(old_state, new_state, temperature):
             return new_state
         else:
             return old_state
-
-
-def acceptor_alt(old_state, new_state, temperature):
-    if score(new_state) <= score(old_state):
-        return new_state
-    else:
-        return old_state
-
 
 def linear_temperature_func(i, iterations):
     """
@@ -98,10 +114,12 @@ def sigmoid_temperature_func(i, iterations):
 
 def anneal(start_state, iterations, temperature_function):
     scores=[]
+    dunbrack_library = dp.parse_dunbrack(dunbrack_file)
     current_state=start_state
     for i in range(iterations):
         scores.append(score(current_state))
         current_temperature = temperature_function(i, iterations)
-        new_state = get_neighbour_state(current_state, str(i)+".pdb")
+        new_state = get_neighbour_state(current_state, str(i)+".pdb", dunbrack_library)
         current_state = acceptor(current_state, new_state, current_temperature)
+        print(current_state)
     return current_state, scores
