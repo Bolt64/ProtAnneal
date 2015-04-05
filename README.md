@@ -15,6 +15,7 @@ for.
    page](http://dunbrack.fccc.edu/bbdep2010/DownloadPageExample.php).
 4. reduce - Can be downloaded from [this
    page](http://kinemage.biochem.duke.edu/software/).
+
 Note that the above dependencies are licensed software, and a license has to be
 obtained before downloading them.
 
