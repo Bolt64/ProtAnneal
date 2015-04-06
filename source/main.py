@@ -3,6 +3,8 @@
 """
 The main script that does it all
 """
+
+from __future__ import print_function
 import annealing as an
 import os
 import create_primer as primer
@@ -26,6 +28,10 @@ def main(original_pdb, iterations, temperature_function, result_dir):
     ax.set_ylabel('Zdope score')
     ax.plot(x, scores)
     plt.savefig("{0}/result.png".format(result_dir))
+    score_file = open("{0}/scores.txt".format(result_dir), "a")
+    for s in scores:
+        print(s, file=score_file)
+    score_file.close()
 
 if __name__=="__main__":
     from sys import argv
