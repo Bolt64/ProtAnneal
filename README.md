@@ -1,4 +1,4 @@
-# ProtAnneal v0.1
+# ProtAnneal v0.11
 
 ## About ProtAnneal
 ProtAnneal tries to construct a protein with a given backbone shape. It
