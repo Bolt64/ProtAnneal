@@ -64,6 +64,7 @@ def get_neighbour_state(protein_pdb, name, dunbrack_library, buried_residues):
     residues.
     """
     new_file=open(name, "a")
+    #chosen_residues = [i for i in buried_residues if get_current_residue(protein_pdb, i) in allowed_residues]
     residue_to_mutate=rd.choice(buried_residues)
     current_residue = get_current_residue(protein_pdb, residue_to_mutate)
     new_residue = rd.choice([i for i in allowed_residues if i!=current_residue])

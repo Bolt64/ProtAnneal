@@ -49,5 +49,10 @@ if __name__=="__main__":
     xy=[i for i in vary_across_rm(distance_file, (lower, upper), step_size, lj_potential)]
     x=[i[0] for i in xy]
     y=[i[1] for i in xy]
-    plt.plot(x,y,'ro')
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+    ax.set_title("Total lennard-jones potential vs VdW radius")
+    ax.set_xlabel("Van der Waals radius (Angstrom)")
+    ax.set_ylabel("Total lennard-jones potential")
+    ax.plot(x,y,'ro')
     plt.savefig("/tmp/output")
